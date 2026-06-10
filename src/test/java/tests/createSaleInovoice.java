@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
@@ -16,11 +17,12 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-public class CreatePurchaseReturn {
+public class createSaleInovoice {
 
-	public static void main(String[] args) throws InterruptedException, IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		FileInputStream fis = new FileInputStream("src/test/resources/config.properties");
 		Properties ps = new Properties();
 		ps.load(fis);
@@ -45,8 +47,8 @@ public class CreatePurchaseReturn {
 		driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(20));
 		driver.get(URL);
 		driver.manage().window().maximize();
-		
-		//login
+
+		// login
 
 		driver.findElement(By.xpath("//input[@formcontrolname='UserName']")).sendKeys(USERNAME);
 		driver.findElement(By.xpath("//input[@formcontrolname='Password']")).sendKeys(PASSWORD);
@@ -58,10 +60,13 @@ public class CreatePurchaseReturn {
 		driver.findElement(By.xpath("//*[contains(text(),'Goods Received Note')]")).click();
 		driver.findElement(By.xpath("//input[@value='New']")).click();
 
-		// adding vendor
-		String vendorName = "ONESOFT VENDOR";
-		WebElement vendor = driver.findElement(By.xpath("(//input[@placeholder='Search'])[3]"));
-		vendor.sendKeys(vendorName);
+		// Entering Vendor
+
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+		WebElement vendor = wait
+				.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("(//input[@placeholder='Search'])[3]")));
+
+		vendor.sendKeys("ONESOFT VENDOR");
 		Thread.sleep(2000);
 		vendor.sendKeys(Keys.ARROW_DOWN);
 		vendor.sendKeys(Keys.ENTER);
@@ -81,7 +86,7 @@ public class CreatePurchaseReturn {
 				.click();
 
 		// Date Received
-		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
 		wait.until(ExpectedConditions.elementToBeClickable(By.xpath("(//button[@aria-label='Open calendar'])[3]")));
 
 		driver.findElement(By.xpath("(//button[@aria-label='Open calendar'])[3]")).click();
@@ -94,8 +99,9 @@ public class CreatePurchaseReturn {
 				.click();
 
 		// item search
+		String ItemName = "DUPLICATE";
 		WebElement itemName = driver.findElement(By.xpath("(//input[@placeholder='Search'])[4]"));
-		itemName.sendKeys("DUPLICATE");
+		itemName.sendKeys(ItemName);
 		Thread.sleep(2000);
 		itemName.sendKeys(Keys.ARROW_DOWN);
 		itemName.sendKeys(Keys.ENTER);
@@ -114,8 +120,8 @@ public class CreatePurchaseReturn {
 		driver.findElement(By.cssSelector("input[formcontrolname='ExpiryDateYear']")).sendKeys("27");
 
 		driver.findElement(By.xpath("//input[@value='Save']")).click();
-		
-		//verification
+
+		// verification
 
 		String grnNo = driver.findElement(By.xpath("//td[contains(@class,'mat-column-NumberDisplay')]")).getText()
 				.trim();
@@ -125,86 +131,113 @@ public class CreatePurchaseReturn {
 		} else {
 			System.out.println("GRN Creation Failed");
 		}
+
 		// left navigation
-
-		driver.findElement(
-				By.xpath("//div[contains(@class,'mat-list-item-content') and contains(.,'Purchase Return')]")).click();
-
-		// clicking new button
-		By newBtn = By.xpath("//input[@type='button' and @value='New']");
-		wait.until(ExpectedConditions.elementToBeClickable(newBtn)).click();
-
-		// selecting vendor
-
-		WebElement vendorPR = driver.findElement(By.xpath("(//input[@placeholder='Search'])[2]"));
-		vendorPR.sendKeys(vendorName);
-		Thread.sleep(2000);
-		vendorPR.sendKeys(Keys.ARROW_DOWN);
-		vendorPR.sendKeys(Keys.ENTER);
-
-		// adding GRN number
-
-		WebElement grnField = driver.findElement(By.xpath("(//input[@placeholder='Search'])[3]"));
-		grnField.clear();
-		grnField.sendKeys(grnNo);
-		grnField.sendKeys(Keys.ARROW_DOWN);
-		grnField.sendKeys(Keys.ENTER);
-		
-		//return quantity and return bonus then save
-
-		driver.findElement(By.xpath("//input[@formcontrolname='Qty']")).sendKeys("2");
-		driver.findElement(By.xpath("//input[@formcontrolname='Fqty']")).sendKeys("1");
-		
-		//return date 
-		
-		wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[@aria-label='Open calendar']")));
-
-		driver.findElement(By.xpath("//button[@aria-label='Open calendar']")).click();
-
-		wait.until(ExpectedConditions.elementToBeClickable(
-				By.xpath("//div[contains(@class,'mat-calendar-body-cell-content') and text()='" + currentDay + "']")));
-
-		driver.findElement(
-				By.xpath("//div[contains(@class,'mat-calendar-body-cell-content') and text()='" + currentDay + "']"))
+		driver.findElement(By.xpath("//div[contains(@class,'mat-list-item-content')][contains(.,'Sales Management')]"))
 				.click();
+		By retailInvoice = By.xpath("//div[contains(@class,'mat-list-item-content') and contains(.,'Retail Invoice')]");
+		driver.findElement(retailInvoice).click();
+
+		// new button click
+		driver.findElement(By.xpath("//input[@type='button' and @value='New']")).click();
+
+		// item search
+		WebElement itemsearch = wait
+				.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("(//input[@placeholder='Search'])[6]")));
+		itemsearch.sendKeys(ItemName);
+		Thread.sleep(5000);
+		itemsearch.sendKeys(Keys.ARROW_DOWN);
+		itemsearch.sendKeys(Keys.ENTER);
+
+		// Batch Selection
+
+		WebElement batchDropdown = driver.findElement(By.xpath("//select[@formcontrolname='Batch']"));
+
+		// Wait for batch options to load
+		int count = 0;
+
+		while (count < 20) {
+
+			Select batchWait = new Select(driver.findElement(By.xpath("//select[@formcontrolname='Batch']")));
+
+			if (batchWait.getOptions().size() > 1) {
+				break;
+			}
+
+			Thread.sleep(1000);
+			count++;
+		}
+
+		// Re-locate dropdown after wait
+		batchDropdown = driver.findElement(By.xpath("//select[@formcontrolname='Batch']"));
+
+		batchDropdown.click();
+
+		Select batch = new Select(batchDropdown);
+
+		List<WebElement> options = batch.getOptions();
+
+		System.out.println("Options Count: " + options.size());
+
+		for (WebElement option : options) {
+			System.out.println(option.getText());
+		}
+
+		for (int i = 1; i < options.size(); i++) {
+
+			if (!options.get(i).getText().trim().equalsIgnoreCase("Select")) {
+
+				batch.selectByIndex(i);
+
+				((JavascriptExecutor) driver).executeScript("arguments[0].dispatchEvent(new Event('input'));"
+						+ "arguments[0].dispatchEvent(new Event('change'));", batchDropdown);
+
+				break;
+			}
+		}
+
+		// Enter sales Quantity
+		driver.findElement(By.xpath("//input[@formcontrolname='Qty']")).sendKeys("2");
+
+		// add button click
+
+		WebElement addButton = driver
+				.findElement(By.xpath("//input[@type='button' and normalize-space(@value)='Add']"));
+		addButton.click();
+
+		// fetching grand total and entering in amount received
+
+		WebElement grandTotal = driver.findElement(By.xpath("//input[@formcontrolname='GrandTotal']"));
+		String grandTotalValue = grandTotal.getAttribute("value");
 		
-		//save PR
-		driver.findElement(By.xpath("//input[@type='button' and @value='Save']")).click();
+
+		WebElement amtReceived = driver.findElement(
+		        By.xpath("//input[@formcontrolname='AmtRcvd']")
+		);
+
+		amtReceived.click();
+
+		// Select existing value (0.00)
+		amtReceived.sendKeys(Keys.CONTROL, "a");
+
+		// Delete it
+		amtReceived.sendKeys(Keys.DELETE);
+
+		// Enter Grand Total
+		amtReceived.sendKeys(grandTotalValue);
+
+		// Move focus out of the field
+		amtReceived.sendKeys(Keys.TAB);
+
+		Thread.sleep(1000);
+		
+
+		// save the forms
+		driver.findElement(By.xpath("//span[normalize-space()='Save']")).click();
 		
 		//verification
-		String prNo = driver.findElement(By.xpath("//td[contains(@class,'cdk-column-NumberDisplay')]")).getText().trim();
-
-		if (!prNo.isEmpty()) {
-			System.out.println("Purchase Return " + prNo + " Created Successfully");
-		} else {
-			System.out.println("Purchase Return Creation Failed");
-		}
-		
-		//Purchase return clean up 
-		By checkbox1=By.xpath("//div[contains(@class,'mat-checkbox-inner-container')]");
-		By deleteBtn1=By.xpath("//input[@type='button' and @value='Delete']");
-		By yesBtn1 = By.xpath("//button[normalize-space()='Yes']");
-
-		wait.until(ExpectedConditions.elementToBeClickable(checkbox1)).click();
-		wait.until(ExpectedConditions.elementToBeClickable(deleteBtn1)).click();
-		wait.until(ExpectedConditions.elementToBeClickable(yesBtn1)).click();
-		By row1 = By.xpath("(//mat-row)[1]");
-		wait.until(ExpectedConditions.invisibilityOfElementLocated(row1));
 		
 		
-		//GRN cleanup
-		driver.findElement(By.xpath("//*[contains(text(),'Goods Received Note')]")).click();
-		By checkbox = By.xpath("//div[contains(@class,'mat-checkbox-inner-container')]");
-		By deleteBtn = By.xpath("//input[@type='button' and @value='Delete']");
-		By yesBtn = By.xpath("//button[normalize-space()='Yes']");
-		By row = By.xpath("(//mat-row)[1]");
-
-		wait.until(ExpectedConditions.elementToBeClickable(checkbox)).click();
-		wait.until(ExpectedConditions.elementToBeClickable(deleteBtn)).click();
-		wait.until(ExpectedConditions.elementToBeClickable(yesBtn)).click();
-		wait.until(ExpectedConditions.invisibilityOfElementLocated(row));
-		
-		driver.quit();
 		
 		
 

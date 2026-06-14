@@ -20,7 +20,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-public class createSaleInovoice {
+public class createSaleReturnInovoice {
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 		FileInputStream fis = new FileInputStream("src/test/resources/config.properties");
@@ -123,8 +123,10 @@ public class createSaleInovoice {
 
 		// verification
 
-		String grnNo = driver.findElement(By.xpath("//td[contains(@class,'mat-column-NumberDisplay')]")).getText()
-				.trim();
+		WebElement grnElement = wait.until(ExpectedConditions
+				.visibilityOfElementLocated(By.xpath("//td[contains(@class,'mat-column-NumberDisplay')]")));
+
+		String grnNo = grnElement.getText().trim();
 
 		if (!grnNo.isEmpty()) {
 			System.out.println("GRN " + grnNo + " Created Successfully");
@@ -247,22 +249,87 @@ public class createSaleInovoice {
 			System.out.println("Sales Creation Failed");
 		}
 
+		// Left navigation
+
+		driver.findElement(By.xpath("(//*[contains(normalize-space(text()),'Retail Sales Return')])[1]")).click();
+
+		// sales return new
+		WebElement newButton = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//input[@value='New']")));
+
+		newButton.click();
+
+		// sales return invoice number
+		WebElement searchBox = wait
+				.until(ExpectedConditions.elementToBeClickable(By.xpath("(//input[@placeholder='Search'])[2]")));
+
+		searchBox.sendKeys(salesNo);
+		Thread.sleep(2000);
+		searchBox.sendKeys(Keys.ARROW_DOWN);
+		searchBox.sendKeys(Keys.ENTER);
+
+		// Entering return qty
+		WebElement rtnQty = driver.findElement(By.xpath("//input[@formcontrolname='RtnQty']"));
+		rtnQty.sendKeys("1");
+
+		// Get NetValue
+		WebElement netValueField = wait
+				.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//input[@formcontrolname='NetValue']")));
+
+		// Read value from read only field
+		String netValue = netValueField.getAttribute("value");
+
+		// adding payment
+		WebElement paymentsButton = driver.findElement(By.xpath("//input[@type='button' and @value='Payments']"));
+		paymentsButton.click();
+
+		// Locate Amount field
+		WebElement amountField = wait
+				.until(ExpectedConditions.elementToBeClickable(By.xpath("//input[@formcontrolname='Amount']")));
+
+		// Clear existing value and enter NetValue
+		amountField.clear();
+		amountField.sendKeys(netValue);
+
+		// add payment button
+		WebElement add = driver.findElement(By.xpath("//button[text()='Add']"));
+
+		add.click();
+
+		// ok button
+		WebElement okButton = driver.findElement(By.xpath("//button[normalize-space()='Ok']"));
+
+		okButton.click();
+
+		// saving the form
+		WebElement saveButton = driver.findElement(By.xpath("//input[@type='button' and @value='Save']"));
+		saveButton.click();
+
+		// verification
+		WebElement salesReturnNoElement = wait.until(
+				ExpectedConditions.visibilityOfElementLocated(By.xpath("//td[contains(@class,'mat-column-InvNo')]")));
+
+		String salesReturnNo = salesReturnNoElement.getText().trim();
+
+		System.out.println("Sales Return " + salesReturnNo +" Created Successfully");
+
 		// clean up
-		WebElement selectAll = driver
-				.findElement(By.xpath("(//div[contains(@class,'mat-checkbox-inner-container')])[1]"));
-
-		selectAll.click();
-
-		By deleteBtn = By.xpath("//input[@type='button' and @value='Delete']");
-		By yesBtn = By.xpath("//button[normalize-space()='Yes']");
-		By row = By.xpath("(//mat-row)[1]");
-
-		wait.until(ExpectedConditions.elementToBeClickable(deleteBtn)).click();
-		wait.until(ExpectedConditions.elementToBeClickable(yesBtn)).click();
-
-		// Critical validation
-		wait.until(ExpectedConditions.invisibilityOfElementLocated(row));
-		driver.quit();
+		/*
+		 * WebElement selectAll = driver .findElement(By.xpath(
+		 * "(//div[contains(@class,'mat-checkbox-inner-container')])[1]"));
+		 * 
+		 * selectAll.click();
+		 * 
+		 * By deleteBtn = By.xpath("//input[@type='button' and @value='Delete']"); By
+		 * yesBtn = By.xpath("//button[normalize-space()='Yes']"); By row =
+		 * By.xpath("(//mat-row)[1]");
+		 * 
+		 * wait.until(ExpectedConditions.elementToBeClickable(deleteBtn)).click();
+		 * wait.until(ExpectedConditions.elementToBeClickable(yesBtn)).click();
+		 * 
+		 * // Critical validation
+		 * wait.until(ExpectedConditions.invisibilityOfElementLocated(row));
+		 */
+		// driver.quit();
 
 	}
 

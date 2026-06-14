@@ -111,6 +111,8 @@ public class createGoodsReceivedNote {
 		driver.findElement(By.cssSelector("input[formcontrolname='ExpiryDateYear']")).sendKeys("27");
 
 		driver.findElement(By.xpath("//input[@value='Save']")).click();
+		
+		//verification 
 
 		String grnNo = driver.findElement(By.xpath("//td[contains(@class,'mat-column-NumberDisplay')]")).getText()
 				.trim();
@@ -122,19 +124,17 @@ public class createGoodsReceivedNote {
 		}
 
 		// clean up
-
-		WebDriverWait wait3 = new WebDriverWait(driver, Duration.ofSeconds(15));
 		By checkbox = By.xpath("//div[contains(@class,'mat-checkbox-inner-container')]");
 		By deleteBtn = By.xpath("//input[@type='button' and @value='Delete']");
 		By yesBtn = By.xpath("//button[normalize-space()='Yes']");
 		By row = By.xpath("(//mat-row)[1]");
 
-		wait3.until(ExpectedConditions.elementToBeClickable(checkbox)).click();
-		wait3.until(ExpectedConditions.elementToBeClickable(deleteBtn)).click();
-		wait3.until(ExpectedConditions.elementToBeClickable(yesBtn)).click();
+		wait.until(ExpectedConditions.elementToBeClickable(checkbox)).click();
+		wait.until(ExpectedConditions.elementToBeClickable(deleteBtn)).click();
+		wait.until(ExpectedConditions.elementToBeClickable(yesBtn)).click();
 
 		// 🔥 critical validation
-		wait3.until(ExpectedConditions.invisibilityOfElementLocated(row));
+		wait.until(ExpectedConditions.invisibilityOfElementLocated(row));
 
 		driver.quit();
 
